@@ -2,9 +2,10 @@ import gym
 import os
 import argparse
 import cv2
+import random
 from agent import Agent
 from constants import *
-
+import json
 ENV = "LunarLander-v2"
 
 def run(params):
@@ -80,7 +81,7 @@ def run(params):
                 print('\rEpisode: {:4n}\tAverage Score: {:.2f}\tEpsilon: {:.4f}'.format(i, average_reward, agent.epsilon))
 
         # my addition, quit and record if the reward is sufficient
-        if average_reward >= 200:
+        if average_reward >= 200 and i > 100:
             # record the data in a way that won't have two program access issue - params and current episode - 100 which is scores_window
             statement = {
             'episodeLearnt': i - scores_window,
@@ -92,7 +93,7 @@ def run(params):
             statement.update(params)
 
             # save data
-            unique = 'Log_{}_{}'.format(params['fc1_dims'], params['fc2_dims'])
+            unique = 'Log_{}_{}_N{}'.format(params['fc1_dims'], params['fc2_dims'], params['name'])
     
             a_file = open(unique + ".json", "w")
             json.dump(dictionary_data, a_file)
@@ -159,6 +160,9 @@ if __name__ == "__main__":
                         type=int, nargs='?', default=64, metavar="")
     parser.add_argument('--fc2_dims', help='Number of Nodes in Second Hidden Layer', 
                         type=int, nargs='?', default=64, metavar="")
+
+    parser.add_argument('--name', help='unique save file name', 
+                        type=int, nargs='?', default=random.randrange(100), metavar="")
     
     args = vars(parser.parse_args())
     print ("{:>5}{:<20} {:<20}".format('','Hyperparameters', 'Value'))
