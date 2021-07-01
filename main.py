@@ -78,6 +78,31 @@ def run(params):
                 agent.save_model()
                 best_avg = average_reward
                 print('\rEpisode: {:4n}\tAverage Score: {:.2f}\tEpsilon: {:.4f}'.format(i, average_reward, agent.epsilon))
+
+        # my addition, quit and record if the reward is sufficient
+        if average_reward >= 200:
+            # record the data in a way that won't have two program access issue - params and current episode - 100 which is scores_window
+            statement = {
+            'episodeLearnt': i - scores_window,
+            'episodeEnd': i,
+            "averageReward": average_reward
+
+            }
+
+            statement.update(params)
+
+            # save data
+            unique = 'Log_{}_{}'.format(params['fc1_dims'], params['fc2_dims'])
+    
+            a_file = open(unique + ".json", "w")
+            json.dump(dictionary_data, a_file)
+            a_file.close()
+
+            
+            # quit
+            break
+
+
     if not params['test_mode']:
         agent.tensorboard_writer.close()
     env.close()
