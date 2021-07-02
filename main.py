@@ -6,7 +6,7 @@ import random
 from agent import Agent
 from constants import *
 import json
-
+import pandas as pd
 import os
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -105,6 +105,9 @@ def run(params):
             statement.update(params)
 
             # save data
+            df = pd.DataFrame.from_dict(statement)
+            with open("Results.csv", 'a') as f:
+                df.to_csv(f, header=f.tell()==0)
             
     
             a_file = open(unique + ".json", "w")
