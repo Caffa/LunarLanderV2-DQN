@@ -53,8 +53,9 @@ class Agent():
             self.update_cntr = 0
             self.memory = ReplayBuffer(max_mem_size, batch_size, n_actions, seed)
     
-    def save_model(self):
+    def save_model(self, name=None):
         # Create models folder
+        # TODO add name to the save directory so it does not override and can save multiple checkpoint
         if not os.path.isdir(f'models/{self.agent_name}'):
             os.makedirs(f'models/{self.agent_name}')
         T.save(self.Q_eval.state_dict(), f'./models/{self.agent_name}/{self.agent_name}_EVAL.pth')

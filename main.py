@@ -6,6 +6,11 @@ import random
 from agent import Agent
 from constants import *
 import json
+
+import os
+
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 ENV = "LunarLander-v2"
 
 def run(params):
@@ -19,10 +24,10 @@ def run(params):
                              cv2.VideoWriter_fourcc(*'MJPG'),
                              60, (600,400))
     
-    load_checkpoint = os.path.exists(f'./models/{agent.agent_name}/{agent.agent_name}_EVAL.pth') and os.path.exists(f'./models/{agent.agent_name}/{agent.agent_name}_TARGET.pth')
+    # load_checkpoint = os.path.exists(f'./models/{agent.agent_name}/{agent.agent_name}_EVAL.pth') and os.path.exists(f'./models/{agent.agent_name}/{agent.agent_name}_TARGET.pth')
     
-    if load_checkpoint:
-        agent.load_model()
+    # if load_checkpoint:
+    #     agent.load_model()
         
     average_reward, best_avg = 0, -1000
     scores, eps_history = [], []
@@ -31,6 +36,8 @@ def run(params):
     n_steps = 0
     limit_steps = params['limit_steps']
     scores_window = params['scores_window']
+
+    unique = 'Log_{}_{}_{}_{}_N{}_{}'.format(params['agent_mode'], params['network_mode'],params['fc1_dims'], params['fc2_dims'],  params['name'],  params['randID'])
     
     for i in range(n_games):
         score = 0
@@ -72,16 +79,21 @@ def run(params):
         min_reward = min(scores[-scores_window:])
         max_reward = max(scores[-scores_window:])
 
+        ## TODO save model during training so can render some progress shots later
+
         if not params['test_mode']:
             agent.on_epsiode_end(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, n_steps=n_steps, i_steps=i_step)
 
             if best_avg < average_reward and i > 100: 
                 agent.save_model()
+                oldavv = best_avg
                 best_avg = average_reward
-                print('\rEpisode: {:4n}\tAverage Score: {:.2f}\tEpsilon: {:.4f}'.format(i, average_reward, agent.epsilon))
+                if oldavv + 10 < average_reward: 
+                    print('\rEpisode: {:4n}\tAverage Score: {:.2f}\tEpsilon: {:.4f}'.format(i, average_reward, agent.epsilon))
 
         # my addition, quit and record if the reward is sufficient
-        if average_reward >= 200 and i > 100:
+        if average_reward >= 200 and i > 100 and not params['test_mode']:
+            print('\n won the game for {} at {} eps'.format(unique, i))
             # record the data in a way that won't have two program access issue - params and current episode - 100 which is scores_window
             statement = {
             'episodeLearnt': i - scores_window,
@@ -93,10 +105,10 @@ def run(params):
             statement.update(params)
 
             # save data
-            unique = 'Log_{}_{}_N{}'.format(params['fc1_dims'], params['fc2_dims'], params['name'])
+            
     
             a_file = open(unique + ".json", "w")
-            json.dump(dictionary_data, a_file)
+            json.dump(statement, a_file)
             a_file.close()
 
             
@@ -162,7 +174,9 @@ if __name__ == "__main__":
                         type=int, nargs='?', default=64, metavar="")
 
     parser.add_argument('--name', help='unique save file name', 
-                        type=int, nargs='?', default=random.randrange(100), metavar="")
+                        type=str, nargs='?', default=str(random.randrange(100)), metavar="")
+    parser.add_argument('--randID', help='unique save file name', 
+                        type=str, nargs='?', default=str(random.randrange(100)), metavar="")
     
     args = vars(parser.parse_args())
     print ("{:>5}{:<20} {:<20}".format('','Hyperparameters', 'Value'))
