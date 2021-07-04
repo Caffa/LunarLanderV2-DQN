@@ -8,6 +8,7 @@ from constants import *
 import json
 import pandas as pd
 import os
+from datetime import datetime
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -16,7 +17,7 @@ ENV = "LunarLander-v2"
 def run(params):
     env = gym.make(ENV)
     
-    agent = Agent(input_dims=env.observation_space.shape, n_actions=env.action_space.n, seed=params['seed'], agent_mode=params['agent_mode'], network_mode=params['network_mode'], test_mode=params['test_mode'], batch_size=params['batch_size'], n_epochs=params['n_epochs'], update_every=params['update_every'], lr=params['lr'], fc1_dims=params['fc1_dims'], fc2_dims=params['fc2_dims'], gamma=params['gamma'], epsilon=params['epsilon'], eps_end=params['eps_end'], eps_dec=params['eps_dec'], max_mem_size=params['max_mem_size'], tau=params['tau'])
+    agent = Agent(input_dims=env.observation_space.shape, n_actions=env.action_space.n, seed=params['seed'], agent_mode=params['agent_mode'], network_mode=params['network_mode'], test_mode=params['test_mode'], batch_size=params['batch_size'], n_epochs=params['n_epochs'], update_every=params['update_every'], lr=params['lr'], fc1_dims=params['fc1_dims'], fc2_dims=params['fc2_dims'], fc3_dims=params['fc3_dims'], gamma=params['gamma'], epsilon=params['epsilon'], eps_end=params['eps_end'], eps_dec=params['eps_dec'], max_mem_size=params['max_mem_size'], tau=params['tau'])
     
     if not os.path.isdir(f'videos'): os.makedirs(f'videos')
     if params['test_mode']:
@@ -92,29 +93,39 @@ def run(params):
                     print('\rEpisode: {:4n}\tAverage Score: {:.2f}\tEpsilon: {:.4f}'.format(i, average_reward, agent.epsilon))
 
         # my addition, quit and record if the reward is sufficient
-        if average_reward >= 200 and i > 100 and not params['test_mode']:
+        if average_reward >= params['reward'] and i > 100 and not params['test_mode']:
             print('\n won the game for {} at {} eps'.format(unique, i))
             # record the data in a way that won't have two program access issue - params and current episode - 100 which is scores_window
             statement = {
             'episodeLearnt': i - scores_window,
             'episodeEnd': i,
-            "averageReward": average_reward
+            "averageReward": average_reward,
+            'uniqueID':unique
 
             }
 
             statement.update(params)
 
             # save data
-            df = pd.DataFrame.from_dict(statement)
-            with open("Results.csv", 'a') as f:
-                df.to_csv(f, header=f.tell()==0)
-            
-    
-            a_file = open(unique + ".json", "w")
+
+            now = datetime.now()
+            dt_string = now.strftime("_%m-%d-%H-%M-%S")
+
+            a_file = open(os.path.join("Results", unique + dt_string + ".json") , "w")
             json.dump(statement, a_file)
             a_file.close()
 
-            
+            df = pd.DataFrame.from_records(statement, index=[0])
+
+            try:
+                with open("Results.csv", 'a') as f:
+                    df.to_csv(f, header=f.tell()==0, index=[0])     
+            except Exception as e:
+                print(e)
+            else:
+                with open("Results.csv", 'a') as f:
+                    df.to_csv(f, header=f.tell()==0, index=['uniqueID'])          
+                        
             # quit
             break
 
@@ -175,12 +186,15 @@ if __name__ == "__main__":
                         type=int, nargs='?', default=64, metavar="")
     parser.add_argument('--fc2_dims', help='Number of Nodes in Second Hidden Layer', 
                         type=int, nargs='?', default=64, metavar="")
+    parser.add_argument('--fc3_dims', help='Number of Nodes in Third Hidden Layer', 
+                        type=int, nargs='?', default=64, metavar="")
 
     parser.add_argument('--name', help='unique save file name', 
                         type=str, nargs='?', default=str(random.randrange(100)), metavar="")
     parser.add_argument('--randID', help='unique save file name', 
                         type=str, nargs='?', default=str(random.randrange(100)), metavar="")
-    
+    parser.add_argument('--reward', help='to stop the training', 
+                        type=int, nargs='?', default=200, metavar="")    
     args = vars(parser.parse_args())
     print ("{:>5}{:<20} {:<20}".format('','Hyperparameters', 'Value'))
     for k,v in args.items():

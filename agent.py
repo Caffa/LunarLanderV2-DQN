@@ -10,7 +10,7 @@ from utils import ReplayBuffer
 
 class Agent():
     def __init__(self, input_dims, n_actions, seed, agent_mode=SIMPLE, network_mode=SIMPLE, test_mode=False, batch_size=64, n_epochs=5, 
-                 update_every=5, lr=0.0005, fc1_dims=64, fc2_dims=64, gamma=0.99, epsilon=1.0, eps_end=0.01, eps_dec=0.995, 
+                 update_every=5, lr=0.0005, fc1_dims=64, fc2_dims=64, fc3_dims=64, gamma=0.99, epsilon=1.0, eps_end=0.01, eps_dec=0.995, 
                  max_mem_size=1_00_000, tau=1e-3):
         self.input_dims = input_dims
         self.n_actions = n_actions
@@ -37,13 +37,13 @@ class Agent():
         self.agent_name = f'{agent_}{network_}DQN'.strip()
         
         if network_mode==DUELING:
-            self.Q_eval = DuelingDeepQNetwork(input_dims=input_dims, n_actions=n_actions, seed=seed, lr=lr, fc1_dims=fc1_dims, fc2_dims=fc2_dims)
+            self.Q_eval = DuelingDeepQNetwork(input_dims=input_dims, n_actions=n_actions, seed=seed, lr=lr, fc1_dims=fc1_dims, fc2_dims=fc2_dims, fc3_dims=fc3_dims)
             if not test_mode:
-                self.Q_next = DuelingDeepQNetwork(input_dims=input_dims, n_actions=n_actions, seed=seed, lr=lr, fc1_dims=fc1_dims, fc2_dims=fc2_dims)
+                self.Q_next = DuelingDeepQNetwork(input_dims=input_dims, n_actions=n_actions, seed=seed, lr=lr, fc1_dims=fc1_dims, fc2_dims=fc2_dims, fc3_dims=fc3_dims)
         else:
-            self.Q_eval = DeepQNetwork(input_dims=input_dims, n_actions=n_actions, seed=seed, lr=lr, fc1_dims=fc1_dims, fc2_dims=fc2_dims)
+            self.Q_eval = DeepQNetwork(input_dims=input_dims, n_actions=n_actions, seed=seed, lr=lr, fc1_dims=fc1_dims, fc2_dims=fc2_dims, fc3_dims=fc3_dims)
             if not test_mode:
-                self.Q_next = DeepQNetwork(input_dims=input_dims, n_actions=n_actions, seed=seed, lr=lr, fc1_dims=fc1_dims, fc2_dims=fc2_dims)
+                self.Q_next = DeepQNetwork(input_dims=input_dims, n_actions=n_actions, seed=seed, lr=lr, fc1_dims=fc1_dims, fc2_dims=fc2_dims, fc3_dims=fc3_dims)
         
         if not test_mode:
             
